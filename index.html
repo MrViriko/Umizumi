@@ -1,0 +1,365 @@
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Umizuumi's Volleyball Shop</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        header {
+            background-color: #000;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            font-size: 1.5em;
+        }
+        h2 {
+           text-align: center;
+        }
+        p{
+           text-align: center;
+        }
+        nav {
+            background-color: #222;
+            padding: 15px;
+            text-align: center;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            margin: 0 10px;
+            font-size: 1.2em;
+            transition: background 0.3s, border-radius 0.3s;
+            cursor: pointer;
+        }
+
+        nav a:hover {
+            background-color: #555;
+            border-radius: 10px;
+        }
+
+        .content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .section {
+            display: none;
+            padding: 20px;
+            margin-bottom: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .product-card:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .cart-item button {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        footer {
+            background-color: #222;
+            color: white;
+            padding: 25px;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        #cart-total {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #cart-total button {
+            background-color: green;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Umizuumi's Volleyball Shop</h1>
+    </header>
+
+    <nav>
+        <a onclick="loadPage('inicio')">Inicio</a>
+        <a onclick="loadPage('productos')">Productos</a>
+        <a onclick="loadPage('carrito')">Carrito (<span id="cart-count">0</span>)</a>
+        <a onclick="loadPage('ayuda')">Ayuda</a>
+    </nav>
+
+    <div class="content" id="content">
+      <div id="inicio" class="section" style="display: block; text-align: center;">
+          <h2>Bienvenido a Umizuumi's Volleyball Shop</h2>
+          <img src="https://www.mistralchronicles.com/wp-content/uploads/2020/12/Haikyuu-00.jpg" alt="Tienda" style="width: 50%; height: auto;">
+          <p>Tu mejor opción en artículos de voleibol. ¡Encuentra todo lo que necesitas aquí!</p>
+      </div>
+     </div>
+
+        
+        <div id="productos" class="section">
+            <h2>Productos Disponibles</h2>
+            <label for="category">Filtrar por categoría:</label>
+            <select id="category" onchange="filterProducts()">
+                <option value="all">Todas</option>
+                <option value="balones">Balones</option>
+                <option value="rodilleras">Rodilleras</option>
+                <option value="calzado">Zapatos</option>
+                <option value="accesorios">Accesorios</option>
+                <option value="ropa">Ropa</option>
+            </select>
+            <div class="product-container" id="productContainer"></div>
+        </div>
+        
+        <div id="carrito" class="section">
+            <h2>Carrito de Compras</h2>
+            <div id="cart-items"></div>
+            <div id="cart-total">
+                <p><strong>Total: $<span id="total-price">0</span></strong></p>
+                <button onclick="generateInvoice()">Comprar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        let cart = [];
+        let products = [
+            { name: "Balón Mikasa V200W", description: "Balón oficial FIVB", price: 900, category: "balones", img: "https://i5.walmartimages.com/asr/fe3350de-8626-4131-a37e-ec27de488d82.3c9bc9bae26ff32662525dd8e34ef5be.png?odnHeight=612&odnWidth=612&odnBg=FFFFFF" },
+            { name: "Balón Molten V5M5000", description: "Balón profesional de voleibol", price: 450, category: "balones", img: "https://voleigram.com/wp-content/uploads/2021/01/balon-voleibol-molten-v5m5000-flistatec-3-800x800.jpg" },
+            { name: "Balón Wilson AVP", description: "Balón de voleibol de playa", price: 255, category: "balones", img: "https://m.media-amazon.com/images/I/51lD9aoGikL.jpg" },
+            { name: "Balón Tachikara SV5W", description: "Balón de entrenamiento", price: 800, category: "balones", img: "https://m.media-amazon.com/images/I/61xlOrgxpYL._AC_SL1200_.jpg" },
+            { name: "Balón Spalding King of the Beach", description: "Balón para voleibol de playa", price: 150, category: "balones", img: "https://http2.mlstatic.com/D_NQ_NP_864893-MLU78016645710_082024-O.webp" },
+            { name: "Balón Gala Pro-Line 10", description: "Balón de competencia", price: 200, category: "balones", img: "https://cdn.sportshop.com/catalog/product/406/406/1/5/153555_1.jpg" },
+            { name: "Balón Adidas Elite Pro", description: "Balón indoor profesional", price: 450, category: "balones", img: "https://m.media-amazon.com/images/I/51xmIBp8-wL._AC_UF894,1000_QL80_.jpg" },
+            { name: "Balón Under Armour Striker", description: "Balón de entrenamiento", price: 300, category: "balones", img: "https://gw.alicdn.com/imgextra/i1/1993730769/O1CN01IqJLBg1HYFS58dmJo_!!0-item_pic.jpg_540x540q90.jpg" },
+            
+            { name: "Rodilleras Nike Streak", description: "Rodilleras acolchonadas", price: 1000, category: "rodilleras", img: "https://m.media-amazon.com/images/I/61BjyzM0WgL.jpg" },
+            { name: "Rodilleras Mizuno LR6", description: "Rodilleras de alta protección", price: 500, category: "rodilleras", img: "https://m.media-amazon.com/images/I/61PJl5FTkZL._AC_UF1000,1000_QL80_.jpg" },
+            { name: "Rodilleras Adidas Elite", description: "Rodilleras de compresión", price: 600, category: "rodilleras", img: "https://m.media-amazon.com/images/I/61dQZu3ht3L.jpg" },
+            { name: "Rodilleras Under Armour HexPad", description: "Rodilleras con tecnología HexPad", price: 300, category: "rodilleras", img: "https://m.media-amazon.com/images/I/517dplFGbYL._AC_SX679_.jpg" },
+            
+            { name: "Red de Voleibol Mikasa", description: "Red oficial para competencias", price: 1500, category: "accesorios", img: "https://www.elmundodeportivo.com.mx/wp-content/uploads/2020/05/MIKASA-VBN-2.png" },
+            { name: "Red de Voleibol Molten", description: "Red de alta resistencia", price: 900, category: "accesorios", img: "https://www.tradeinn.com/f/14067/140671237/emde-red-de-voleibol-top-competition-9.5x1-m-3-mm.webp" },
+            { name: "Red de Voleibol Wilson", description: "Red de voleibol para entrenamiento", price: 500, category: "accesorios", img: "https://m.media-amazon.com/images/I/719qJmmLXhL._AC_UF894,1000_QL80_.jpg" },
+            
+            { name: "Zapatos Nike Hyperace", description: "Zapatos de voleibol ligeros", price: 1500, category: "calzado", img: "https://m.media-amazon.com/images/I/31lQjPH5IpS._AC_SY780_.jpg" },
+            { name: "Zapatos Mizuno Wave Lightning", description: "Zapatos de alto rendimiento", price: 95, category: "calzado", img: "https://m.media-amazon.com/images/I/41Pn34Jd8cL._AC_.jpg" },
+            { name: "Zapatos Adidas Court Team", description: "Zapatos con gran tracción", price: 85, category: "calzado", img: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/7545c0bbcda64bc29774aaf000f7e099_9366/Tenis_Team_adidas_Court_Blanco_EG9734_01_standard.jpg" },
+            { name: "Zapatos Asics Sky Elite", description: "Zapatos con amortiguación", price: 100, category: "calzado", img: "https://api.deporprive.app/storage/hub/images/102212/home_default/a125b2f583.webp" },
+            
+            { name: "Muñequeras Nike Pro", description: "Muñequeras de absorción", price: 12, category: "accesorios", img: "https://www.innovasport.com/medias/munequera-nike-pro-30-is-N.100.0679.010-1.100?context=bWFzdGVyfGltYWdlc3wxMzMyMTZ8aW1hZ2UvanBlZ3xhVzFoWjJWekwyZ3pOeTlvTURNdk1USTRNemczTWpBNU5qSTFPVEF1YW5CbnwyY2FjMWI1ZDhhMjU3ZDcxYzAzMDFmNjc2NWQ5MGM4ZWE2OTIwYzlkODc2NWQ4MmRiMDRlZDczZDBjN2IwZTdk" },
+            { name: "Muñequeras Adidas Performance", description: "Muñequeras deportivas", price: 10, category: "accesorios", img: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/45f1d60c5ae24c5792eeaef500c3f75c_9366/Munequera_de_Tenis_Grande_Negro_IC3568_01_standard.jpg" },
+            { name: "Muñequeras Under Armour", description: "Muñequeras elásticas", price: 15, category: "accesorios", img: "https://underarmour.scene7.com/is/image/Underarmour/1276991-001_SLF_SL?rp=standard-0pad|pdpMainDesktop&scl=1&fmt=jpg&qlt=85&resMode=sharp2&cache=on,on&bgc=F0F0F0&wid=566&hei=708&size=566,708" },
+            
+            { name: "Camiseta Mizuno Vball", description: "Camiseta de voleibol transpirable", price: 35, category: "ropa", img: "https://m.media-amazon.com/images/I/51KzUfq9eQL._AC_UF894,1000_QL80_.jpg" },
+            { name: "Camiseta Adidas Volley", description: "Camiseta cómoda para jugar", price: 30, category: "ropa", img: "https://sportpalace.com.mx/cdn/shop/files/dss.jpg?v=1709577664" },
+            { name: "Camiseta Nike Attack", description: "Camiseta de secado rápido", price: 32, category: "ropa", img: "https://m.media-amazon.com/images/I/41+HjmHRo7L._AC_SY879_.jpg" },
+            
+            { name: "Shorts Mizuno Wave", description: "Shorts flexibles para voleibol", price: 28, category: "ropa", img: "https://tha.mizuno.com/cdn/shop/files/SH_J2GBC20202_20_eb34d038-5686-40fe-a0b6-ea196fb9c193.jpg?v=1732780997&width=533" },
+            { name: "Shorts Adidas Court", description: "Shorts con ajuste elástico", price: 27, category: "ropa", img: "https://assets.adidas.com/images/h_840,f_auto,q_auto,fl_lossy,c_fill,g_auto/7e35ac669da440e7bda7af0a00dbcdf4_9366/Shorts_De_Tenis_Club_3_Franjas_Blanco_HS3251_01_laydown.jpg" },
+            { name: "Shorts Nike Pro", description: "Shorts deportivos de voleibol", price: 29, category: "ropa", img: "https://m.media-amazon.com/images/I/51Y1qrNaCOL._AC_UY1000_.jpg" }
+        ];
+
+        function loadPage(page) {
+            document.querySelectorAll('.section').forEach(section => section.style.display = 'none');
+            document.getElementById(page).style.display = 'block';
+        }
+
+        function addToCart(name, price) {
+            let item = cart.find(p => p.name === name);
+            if (item) {
+                item.quantity++;
+            } else {
+                cart.push({ name, price, quantity: 1 });
+            }
+            document.getElementById('cart-count').innerText = cart.reduce((acc, p) => acc + p.quantity, 0);
+            updateCart();
+        }
+
+        function updateCart() {
+            let cartItems = document.getElementById('cart-items');
+            let totalPrice = 0;
+            cartItems.innerHTML = '';
+
+            cart.forEach(item => {
+                let div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `${item.name} - $${item.price} x ${item.quantity} <button onclick="removeFromCart('${item.name}')">Eliminar</button>`;
+                cartItems.appendChild(div);
+                totalPrice += item.price * item.quantity;
+            });
+
+            document.getElementById('total-price').innerText = totalPrice;
+        }
+
+        function removeFromCart(name) {
+            cart = cart.filter(item => item.name !== name);
+            updateCart();
+        }
+        function removeFromCart(name) {
+    let itemIndex = cart.findIndex(p => p.name === name);
+    if (itemIndex !== -1) {
+        let item = cart[itemIndex];
+        if (item.quantity > 1) {
+            item.quantity--;
+        } else {
+            cart.splice(itemIndex, 1);
+        }
+    }
+    document.getElementById('cart-count').innerText = cart.reduce((acc, p) => acc + p.quantity, 0);
+    updateCart();
+}
+
+
+        function filterProducts() {
+    let category = document.getElementById('category').value;
+    let container = document.getElementById('productContainer');
+    container.innerHTML = '';
+
+    // Filtra los productos por categoría
+    let filteredProducts = products.filter(p => category === 'all' || p.category === category);
+
+    // Si no hay productos en la categoría seleccionada, mostramos un mensaje
+    if (filteredProducts.length === 0) {
+        container.innerHTML = '<p>No se encontraron productos en esta categoría.</p>';
+        return;
+    }
+
+    // Ordena los productos por precio (de menor a mayor)
+    filteredProducts.sort((a, b) => a.price - b.price);
+
+    // Muestra los productos ordenados
+    filteredProducts.forEach(product => {
+        let card = document.createElement('div');
+        card.className = 'product-card';
+        card.innerHTML = `<img src="${product.img}" alt="${product.name}"><h3>${product.name}</h3><p>${product.description}</p><p>Precio: $${product.price}</p>`;
+        let button = document.createElement('button');
+        button.innerText = "Agregar al Carrito";
+        button.onclick = () => addToCart(product.name, product.price);
+        card.appendChild(button);
+        container.appendChild(card);
+    });
+}
+
+
+        function generateInvoice() {
+    let total = 0;
+    let invoiceItems = '';
+    cart.forEach(item => {
+        total += item.price * item.quantity;
+        invoiceItems += `${item.name} x ${item.quantity} - $${item.price * item.quantity}\n`;
+    });
+
+    // Usando jsPDF para generar el PDF
+    const { jsPDF } = window.jspdf;
+    let doc = new jsPDF();
+    
+    // Título
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text("Factura de Compra", 105, 20, null, null, 'center');
+    
+    // Fecha
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.text(`Fecha: ${new Date().toLocaleString()}`, 20, 30);
+    
+    // Información del cliente
+    doc.text("Cliente: Umizuumi", 20, 40);
+    doc.text("Dirección: Calle Ejemplo 123", 20, 50);
+
+    // Línea divisoria
+    doc.setLineWidth(0.5);
+    doc.line(20, 60, 190, 60); // Línea horizontal
+
+    // Títulos de la tabla de productos
+    doc.setFont('helvetica', 'bold');
+    doc.text("Producto", 20, 70);
+    doc.text("Cantidad", 120, 70);
+    doc.text("Precio Total", 170, 70);
+
+    // Línea divisoria debajo de los títulos
+    doc.line(20, 75, 190, 75);
+
+    // Productos en la tabla
+    doc.setFont('helvetica', 'normal');
+    let y = 80;
+    cart.forEach(item => {
+        doc.text(item.name, 20, y);
+        doc.text(item.quantity.toString(), 120, y);
+        doc.text(`$${item.price * item.quantity}`, 170, y);
+        y += 10;
+    });
+
+    // Línea divisoria debajo de los productos
+    doc.line(20, y, 190, y);
+
+    // Total
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total: $${total}`, 20, y + 10);
+
+    // Instrucciones adicionales
+    doc.setFont('helvetica', 'italic');
+    doc.text("Gracias por tu compra. ¡Vuelve pronto!", 20, y + 20);
+
+    // Guardar el PDF
+    doc.save('factura.pdf');
+}
+
+        filterProducts();
+    </script>
+</body>
+</html>
